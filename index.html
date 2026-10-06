@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>지쿱 AI 대학교 1학년 3.0  ver</title>
+<style>
+:root { --bg:#f7f7fb; --card:#fff; --ink:#12131a; --muted:#6e7480; --line:#e8e9ef; --accent:#3c5cff; --soft:#eef2ff; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",Segoe UI,sans-serif; background:var(--bg); color:var(--ink); }
+.hero { position:relative; padding:14px 14px 10px; background:linear-gradient(180deg,#ffffff 0%,#f7f7fb 100%); }
+.hero img { width:100%; max-height:220px; object-fit:cover; border-radius:24px; display:block; background:#ddd; box-shadow:0 12px 30px rgba(0,0,0,.10); }
+.hero h1 { margin:16px 4px 12px; font-size:24px; line-height:1.25; letter-spacing:-.04em; }
+.searchWrap { position:sticky; top:0; z-index:50; background:rgba(247,247,251,.92); backdrop-filter:blur(10px); padding:8px 14px 10px; border-bottom:1px solid var(--line); }
+.search { width:100%; border:1px solid var(--line); background:#fff; border-radius:16px; padding:13px 14px; font-size:15px; outline:none; }
+.tabs { display:flex; gap:8px; overflow-x:auto; padding:10px 14px 12px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab { flex:0 0 auto; border:1px solid var(--line); background:#fff; color:#333; border-radius:999px; padding:10px 13px; font-weight:700; font-size:13px; white-space:nowrap; }
+.tab.active { background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 8px 18px rgba(60,92,255,.25); }
+.count { margin:0 14px 8px; color:var(--muted); font-size:13px; }
+.grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; padding:0 14px 28px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:20px; overflow:hidden; box-shadow:0 6px 18px rgba(22,25,37,.05); }
+.thumb { width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,#e8ebff,#fff); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.thumb img, .thumb video { width:100%; height:100%; object-fit:cover; display:block; }
+.placeholder { padding:10px; text-align:center; color:#5a6170; font-size:12px; word-break:break-all; }
+.body { padding:10px; }
+.badge { display:inline-block; font-size:11px; font-weight:800; color:var(--accent); background:var(--soft); padding:4px 7px; border-radius:999px; margin-bottom:6px; }
+.title { font-weight:800; font-size:13px; line-height:1.35; letter-spacing:-.03em; margin-bottom:7px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.promptPreview { font-size:12px; line-height:1.45; color:#3f4652; white-space:pre-wrap; max-height:88px; overflow:hidden; border-top:1px dashed var(--line); padding-top:7px; }
+.actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:0 10px 10px; }
+button, .download { border:0; background:#f1f3f7; color:#20242c; border-radius:12px; padding:9px 6px; font-size:11px; font-weight:800; text-align:center; text-decoration:none; cursor:pointer; }
+button.primary { background:#111827; color:#fff; }
+button.blue { background:var(--accent); color:#fff; }
+.modal { position:fixed; inset:0; z-index:100; display:none; background:rgba(0,0,0,.55); }
+.modal.open { display:block; }
+.sheet { position:absolute; inset:auto 0 0 0; max-height:92vh; overflow:auto; background:#fff; border-radius:26px 26px 0 0; padding:14px; box-shadow:0 -10px 40px rgba(0,0,0,.25); }
+.close { position:sticky; top:0; z-index:2; float:right; width:38px; height:38px; border-radius:999px; background:#111827; color:#fff; font-size:18px; }
+.detailMedia { width:100%; border-radius:20px; overflow:hidden; background:#eef2ff; margin-top:8px; }
+.detailMedia img, .detailMedia video { width:100%; max-height:60vh; object-fit:contain; display:block; background:#f5f5f7; }
+.detailTitle { font-size:20px; line-height:1.3; letter-spacing:-.04em; margin:12px 2px 8px; font-weight:900; }
+.detailPrompt { white-space:pre-wrap; word-break:break-word; line-height:1.65; font-size:14px; background:#f8f9fb; border:1px solid var(--line); border-radius:18px; padding:14px; margin:12px 0 18px; }
+.detailActions { display:grid; grid-template-columns:1fr 1fr; gap:8px; position:sticky; bottom:0; background:linear-gradient(180deg,rgba(255,255,255,.82),#fff); padding:10px 0 6px; }
+.toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#111827; color:#fff; padding:10px 14px; border-radius:999px; font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:200; }
+.toast.show { opacity:1; bottom:34px; }
+@media (min-width:720px) { .page { max-width:760px; margin:0 auto; } .grid { grid-template-columns:repeat(3,1fr); } .sheet { left:50%; transform:translateX(-50%); max-width:760px; border-radius:26px 26px 0 0; } }
+
+.cardLinkWrap { display:block; color:inherit; text-decoration:none; }
+.linkOnlyActions { display:grid; grid-template-columns:1fr; gap:7px; padding:0 10px 12px; }
+.linkGo {
+  display:flex; align-items:center; justify-content:center;
+  min-height:38px; border-radius:12px; border:0;
+  background:var(--accent); color:#fff; font-weight:800;
+  text-decoration:none; font-size:13px;
+}
+.linkHint { color:var(--accent); font-weight:800; font-size:12px; margin-top:6px; }
+
+
+.textTile, .fileTile { width:100%; height:100%; min-height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:12px; text-align:center; }
+.textTile { background:linear-gradient(135deg,#fff7e6,#ffffff); color:#8a5a00; }
+.fileTile { background:linear-gradient(135deg,#ffecec,#ffffff); color:#c0392b; }
+.tileIcon { font-size:38px; line-height:1; }
+.tileLabel { font-weight:900; font-size:13px; letter-spacing:-.02em; }
+.tileName { font-size:11px; color:#5a6170; word-break:break-all; }
+.detailMedia .textTile, .detailMedia .fileTile { min-height:200px; }
+.actions.two { grid-template-columns:1fr 1fr; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <img src="images/1.jpg" alt="대표이미지" onerror="this.outerHTML='<div class=&quot;thumb&quot; style=&quot;aspect-ratio:16/9;border-radius:24px&quot;><div class=&quot;placeholder&quot;>대표이미지<br>images/1.jpg</div></div>'">
+    <h1>지쿱 AI 대학교 1학년 3.0  ver</h1>
+  </header>
+  <div class="searchWrap"><input id="search" class="search" placeholder="프롬프트 검색: 제목, 내용 포함 검색" /></div>
+  <nav class="tabs" id="tabs"></nav>
+  <p class="count" id="count"></p>
+  <main class="grid" id="grid"></main>
+</div>
+<div class="modal" id="modal" aria-hidden="true"><section class="sheet"><button class="close" onclick="closeModal()">×</button><div id="detail"></div></section></div>
+<div class="toast" id="toast">완료</div>
+<script>
+const categories = ["전체보기", "지쿱AI대학교 1주차", "지쿱AI대학교 2주차", "지쿱AI대학교 3주차", "지쿱AI대학교 4주차", "지쿱AI대학교 일일과제 링크", "실습용 프롬프트(이미지,동영상)"];
+const items = [
+  {"category": "지쿱AI대학교 1주차", "media": "images/1-1.jpg", "title": "귀여운 골든 리트리버 강아지", "prompt": "귀여운 골든 리트리버 강아지, 힙합 스타일의 빨간색 털모자와 선글라스, 카메라를 정면으로 응시, 매우 사실적인 4K 사진 스타일", "kind": "image"},
+  {"category": "지쿱AI대학교 1주차", "media": "images/1-2.jpg", "title": "CEO/전문가 링크드인 프로필 사진", "prompt": "깔끔한 정장 차림의 CEO/전문가, 배경은 모던한 공유 오피스, 신뢰감을 주는 미소와 조명, 링크드인 프로필 사진 스타일", "kind": "image"},
+  {"category": "지쿱AI대학교 1주차", "media": "images/1-3.jpeg", "title": "에펠탑 노천 카페 배경 변경", "prompt": "인물은 그대로 유지하고 배경만 바꿔줘. 프랑스 파리의 에펠탑이 보이는 노천 카페, 따뜻한 햇살과 여유로운 분위기, 여행 인플루언서 사진 스타일", "kind": "image"},
+  {"category": "지쿱AI대학교 1주차", "media": "images/1-4.jpeg", "title": "가을 거리 패션 화보 의상 변경", "prompt": "얼굴은 유지하고 옷만 바꿔줘, 최신 트렌드의 오버핏 코트와 머플러, 가을 거리의 패션 화보 느낌, 세련되고 도시적인 분위기", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-0-1.jpg", "title": "프롬프트 공식 1", "prompt": "예시 1:  음식 홍보 카드뉴스 이미지\n\nR(역할): 너는 10년 차 맛집 전문 푸드 마케터야.\nT(작업):  계란말이 김밥과 고래사 어묵으로 만든 어묵탕 신메뉴를 홍보하는 인스타그램용 카드뉴스 이미지를 그려줘.\nC(맥락):  바쁜 점심시간에 간단하면서도 맛있는 음식을 먹고 싶어하는 직장인들을 타겟으로 해. 건강식인 계란말이김밥과 고급스런 고래사 어묵 브랜드의 어묵으로 만든 건강한 어묵탕\nF(형식): 1:1 정사각형 비율 사진 스타일. 화면 상단에 정확히 ＇바쁜 직장인을 위한 간단 건강식＇이라고 흰색 글씨를 크게 넣어줘.", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-0-2.jpg", "title": "프롬프트 공식 2", "prompt": "예시 2: 식당 일일 매출 관리 장부 (구글 시트)\n\nR(역할): 너는 꼼꼼한 식당 전문 자산관리사야.\n\nT(작업): 칼국수 전문점의 오늘 판매 매출 장부를 만들어줘.\n\nC(맥락): 메뉴는 바지락칼국수, 왕만두, 해물파전 세 가지야. 초보 사장님이 한눈에 보기 편하게 판매 수량과 단가가 곱해져서 총매출이 나와야 해. 데이터는 임의로 채워줘.\n\nF(형식): '순번, 메뉴명, 단가, 판매 수량, 총매출' 항목이 포함되고 수식이 자동 계산되는 구글 시트 파일로 출력해줘", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-0-3.jpg", "title": "프롬프트 공식 3", "prompt": "1인 마케터 제품 홍보 (인물 모델 활용)\n예시 3: 내가 모델이 되는 건강식품 홍보 포스터\nR(역할): 너는 뷰티·헬스 브랜드의 광고 화보 감독이야.\nT(작업): 내가 업로드한 사진 속 인물을 모델로 쓴 건강식품 홍보 포스터를 만들어줘.\nC(맥락): 모델이 활기차고 건강한 모습으로 알약 통이나 파우치를 들고 만족스럽게 웃고 있는 장면이야. 배경은 햇살이 잘 드는 깨끗한 거실이나 피트니스 센터야.\nF(형식): 고급스러운 잡지 광고 느낌의 고화질 사진. 세로형 구도. 화면 여백에 큰 글씨로 정확히 '매일 가벼워지는 습관'이라고 적어줘.", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-0-4.jpg", "title": "프롬프트 공식 3 다운로드 파일", "prompt": "다운로드 파일", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-0-5.jpg", "title": "프롬프트 공식 4", "prompt": "1인 마케터 제품 홍보 (인물 모델 활용)\n예시 3: 내가 모델이 되는 식품 홍보 포스터\nR(역할): 너는 음식점을 운영하는 사장님이야.\nT(작업): 내가 업로드한 사진 속 인물을 모델로 쓴 바지락 듬뿍 손칼국수 홍보 포스터를 만들어줘.\nC(맥락): 모델이 편안한 캐주얼 차림으로 앞치마를 입고 활기차고 건강한 모습으로 바지락 듬뿍 손칼국수를  테이블에 앉아 맛있게 먹으며 만족스럽게 웃고 있는 장면이야. 배경은 ＇우리 동네 바지락 칼국수＇ 라는 상호를 가진  매장이야.\nF(형식): 고급스러운 잡지 광고 느낌의 고화질 사진. 세로형 구도. 화면 여백에 큰 글씨로 정확히 '보리밥과 닭한마리의 완벅현 조화'이라고 적어줘", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-1.jpg", "title": "이미지생성 실습 1", "prompt": "업로드한 이미지속 얼굴을 그대로 유지한 영화 같은 흑백 초상화. 주인공은 매끄러운 벽에 편안하게 기대어 옆모습을 보이고 있다. 주인공의 자세는 편안하면서도 우아하다. 머리는 살짝 뒤로 젖혀져 있고, 턱은 들려 있으며, 눈은 고요한 성찰의 순간에 감겨 있다. 왼팔은 자연스럽게 늘어져 있고, 오른팔은 부드럽게 구부러져 허리춤에 투명한 유리잔을 들고 있다.", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-2.jpg", "title": "이미지생성 실습 2", "prompt": "업로드 된 이미지와 100% 동일한 얼굴 정체성을 사용하여 같은 인물의 초실사 8K 인물 사진 9장을 생성하세요. 이를 3x3 그리드(세로 비율)로 배열하고, 각 이미지 속 인물은 서로 다른 색상의 비즈니스 수트(단색과 체크무늬 혼합)를 착용해야 합니다. 각 장면은 고유한 포즈, 몸짓, 그리고 배경 색조를 갖추어야 합니다..", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-3.jpg", "title": "이미지생성 실습 3", "prompt": "[핵심 피사체 및 구도]\n\n업로드된 이미지 속 인물의 하이퍼 리얼리스틱(초실사) 전신 인물 사진입니다. 인물은 '앉아 있는' 자세를 취하고 있습니다. 그 옆에는 지면에 단단히 고정된 세로형 대형 GCOOP 간판이 서 있으며, 세련된 미적 감각을 위해 약간 기울어져 있습니다. 이 오브젝트는 대략 인물의 팔 높이 정도여서, 한쪽 팔을 자연스럽게 얹어 기댈 수 있는 높이입니다. 반대쪽 손에는 '컵'을 들고 있습니다.\n\n[카메라 및 조명 설정]\n\n카메라: 풀프레임 DSLR 카메라 시뮬레이션, 얕은 심도(아웃포커싱)가 적용된 선명한 이미지.\n\n배경: 부드럽고 영화적인 조명이 얼굴과 어깨를 자연스럽게 감싸며 섬세한 그림자와 깊이감을 만드는 미니멀한 파스텔 블루 스튜디오.\n\n[디테일 및 의상]\n\n의상: 인물은 빨간색 스트리트 웨어 후드티, 검은색 바지, 흰색 신발을 착용하고 있습니다.\n\n질감: 옷감, 피부, 머리카락, 그리고 오브젝트 표면의 질감이 극도로 상세하게 표현되어야 합니다.\n\n[전체적인 스타일]\n\n깨끗하고 미니멀하며 현대적이고 시각적으로 강렬한 렌더링 스타일입니다. CGI 느낌이 아닌, 전문적인 패션 화보처럼 보여야 합니다.", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-4.jpg", "title": "이미지생성 실습 4", "prompt": "피카츄 꼬부기와 함께하는 하이엔드 화보 프롬프트\n\n핵심 컨셉:\n첨부한 이미지의 원래 얼굴을 완벽하게 보존하며 스타일화나 변형이 전혀 없는 하이퍼 리얼리스틱 포토리얼리스틱 이미지.\n\n모델 및 의상:\n인물: 자신감 넘치는 표정의 인물. 생동감 있고 밝은 에너지를 풍기며 꼬부기와 장난스럽게 상호작용함.\n의상: 무광 블랙의 고급스러운 선글라스, 풍부한 짜임이 돋보이는 꼬부기와 같은 하늘색 톤의 니트 스웨터, 깔끔한 핏의 블랙 하이웨이스트 청바지, 블랙 & 화이트 하이탑 스니커즈 착용.\n디테일: 선글라스에 은은한 스튜디오 반사광이 맺혀 있으며 전체적인 룩에 자연스럽게 어우러짐.\n피카츄 묘사:\n\n거대한 3D 포토리얼리스틱 꼬부기. 사실적인 털의 질감과 부드러운 조명이 적용됨.\n인물의 팔 아래에서 활기차고 쾌활한 모습으로 인물을 올려다보며 미소 짓고 있음.\n배경 및 기술 사양:\n\n배경: 매끄러운 그라데이션과 깊이감이 느껴지는 선명한 꼬부기 칼라 스튜디오 배경.\n마무리: 대담하고 즐거운 분위기의 하이엔드 잡지 화보(Editorial) 스타일. 날카로운 초점과 자연스러운 색상 균형.", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-7.jpg", "title": "이미지생성 실습 5", "prompt": "극사실적인 메인 주인공 주변에, 그와 동일한 이목구비, 헤어스타일, 신체 비율, 의상을 가진 귀여운 3D 스타일의 치비(Chibi) 미니어처 여러 명이 둘러싸고 있습니다.\n이 치비 캐릭터들은 주인공 주변에 자연스럽게 배치되어 있으며, 주인공 또는 주변 요소들과 매력적이고 방해되지 않는 방식으로 장난스럽게 상호작용하고 있습니다.\n이미지 위에는 생동감 넘치는 손그림 낙서(Doodle) 효과가 겹쳐져 있습니다: 주인공 주변의 부드러운 흰색 테두리, 반짝이는 효과, 하트 낙서, 작은 꽃, 스마일 아이콘, 그리고 \"shine\", \"bright night\", \"happy vibes\"와 같은 떠다니는 흰색 손글씨 문구들이 포함됩니다.\n전체적인 스타일은 하이퍼 리얼리스틱 사진과 알록달록하고 부드러운 카툰 일러스트레이션이 자연스럽게 조화를 이룹니다.\n단, 메인 주인공의 원래 얼굴, 체형 및 비율은 수정 없이 그대로 유지합니다.", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-9.jpg", "title": "이미지생성 실습 6", "prompt": "업로드된 이미지 속 인물이 화이트 빈티지 셰이즈 롱(chaise lounge) 위에 우아하게 앉아 있는 하이패션 스튜디오 포트레이트. 인물의 긴 실루엣의 구조적인 딥 블루 맞춤형 비즈니스 정장을 입고 있습니다. 팔걸이에 한쪽 팔을 얹고 다리를 꼬고 앉아, 차분하면서도 에디토리얼한 표정으로 자신감 있게 포즈를 취하고 있습니다.\n\n배경에는 인물의 얼굴을 각진 다각형(polygonal) 형태로 표현한 대형 흑백 기하학 벽화가 배치되어 있습니다. 미니멀한 스튜디오 설정, 부드럽게 분산된 조명, 깨끗한 화이트 배경, 시네마틱한 그림자, 사실적인 피부 톤, 럭셔리 패션 잡지 스타일, 파인 아트 구성, 미묘한 대비, 초고해상도, 정제되고 시대를 초월한 분위기.", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/3-2.jpg", "title": "이미지생성 실습 7", "prompt": "핵심 컨셉:\n업로드된 참조 이미지를 원본 소스로 사용하여, 모델의 이목구비 특징을 100% 유지한 실사 스타일의 보그 잡지 커버 패션 포트레이트를 생성합니다. 첨부한 이미지 인물의 본연의 아름다움을 간직한 채 자신감 넘치는 포즈를 취하고 있습니다.\n\n\n모델의 표정 및 포즈:\n\n왼쪽 눈을 윙크하며 장난스럽게 입술을 내밀고 있습니다.\n양손을 높이 들어 볼 옆에서 하트 모양을 만들고 있습니다.\n\n배경 및 상황:\n\n마치 파파라치와 사진작가들이 사방에서 인물을 찍고 있는 듯, 수많은 DSLR 카메라와 스마트폰에 둘러싸여 있습니다.\n일부 스마트폰 화면에는 인물의 라이브 피드가 표시되고 있습니다.\n\n메이크업 및 스타일링:\n첨부한 이미지가 남자일 경우, 인물을 가장 잘 생기게 보이게 할 수 있는 하이라이트 효과\n첨부한 이미지가 여자일 경우, 결점 없이 빛나는 피부, 모델과 같은 헤어와 메이크업, 부드러운 볼터치와 적절한 하이라이터 효과.\n\n\n의상 및 액세서리:\n첨부한 이미지가 남자일 경우, 프라다 턱시도\n첨부한 이미지가 여자일 경우, 우아하고 심플한 시상식 의상, 의상에 맞는 고급스러운 패션 주얼리 착용.\n\n\n촬영 스타일 및 기술적 사양:\n구도: 클로즈업에서 상반신까지 이어지는 패션 포트레이트, 보그 잡지 편집 스타일, 상단에 크고 눈에 띄는 로고 배치.\n조명: 시네마틱한 전문 스튜디오 조명, 부드러운 HDR 배경, 얕은 심도(아웃포커싱).\n렌즈: 전문 SLR 스타일, 85mm 렌즈 느낌, f/1.8 조리개값, 날카로운 초점과 부드러운 배경 흐림.\n품질: 극도로 세밀한 피부 질감, 울트라 디테일, 8K 해상도.\n\n분위기:\n\n장난스러우면서도 럭셔리한 느낌, 하이엔드 패션 및 뷰티 화보, AI가 만든 티가 나지 않는 전문 패션 사진작가가 촬영한 듯한 자연스럽고 사실적인 분위기.", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-9-1.jpg", "title": "이미지생성 실습 8", "prompt": "귀엽고 친근한 스타일의 3D 일러스트레이터 스타일로, 사람들이 모여서 노트북을 보며 즐겁게 웃는 모습을 그려줘.\n배경은 밝은 파스텔톤. 화면 중앙에 큰 글씨로 'AI 왕초보 모임'이라고 적고, 그 아래에 작게 '누구나 쉽게 배우는 AI'라고 적어줘.\n글씨는 둥글고 귀여운 서체.\n9:16사이즈", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-9-2.jpg", "title": "이미지생성 실습 9", "prompt": "미래적이고 세련된 분위기의 대학교 강의실 배경. 푸른색과 보라색 그라데이션 조명. 화면 상단에 아주 크고 깔끔한 글씨로 정확히 '지쿱 AI대학교 교육일정'이라고 적어줘. 그 아래 공간은 글자가 잘 보이도록 깔끔하게 비워두거나 옅은 문양만 넣어줘. 고화질 사진 스타일,\n9:16사이즈", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-9-3.jpg", "title": "전단지 생성 실습 10", "prompt": "업로드한 파일속 제품을 분석해서 한장의 전단지 이미지로 만들어줘 9:16", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/웨이브플러스.pdf", "title": "전단지 생성 실습 파일다운로드", "prompt": "PDF 다운로드 파일", "kind": "file"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-9-4.jpg", "title": "캐러셀이미지 생성 실습 11", "prompt": "업로드한 파일 속 제품을 분석해서 인스타그램에 업로드할 캐러셀 이미지로 만들어줘", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/텔로메라스킨케어.pdf", "title": "캐러셀이미지 생성 실습 파일다운로드", "prompt": "PDF 다운로드 파일", "kind": "file"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/2-9-5.jpg", "title": "이미지 생성 실습 12", "prompt": "업로드한 이미지속 인물의 젊은 시절 모습을 모델로 해서 홍보 포스터를 만들어줘. 헤어스타일, 소품은 그대로 유지, 의상은 업로드한 제품의 분위기와 맞는 컨셉의 모델의상,\n모델이 왼손에 [업로드한 이미지속 제품의 형태를 그대로 유지]을 들고 활짝 웃고 있어야 해. 배경은 화사한 아침 햇살이 들어오는 세련된 파우더룸. 스타일은 고화질 화보 사진. 화면 오른쪽에 큰 글씨로 '피부에 양보하는 타임세일'이라고 적어줘.\"  9:16", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "media": "images/텔로메라세럼.jpg", "title": "텔로메라세럼이미지다운로드", "prompt": "다운로드 파일", "kind": "image"},
+  {"category": "지쿱AI대학교 2주차", "title": "음악 만들기 프롬프트 1.", "prompt": "지쿱 AI대학교 로고송을 만들어줘.  지쿱AI대학교에 입학하는 내용으로 만들어줘. 장르는 로고송에 맞는 장르로 선택해줘", "kind": "text"},
+  {"category": "지쿱AI대학교 2주차", "title": "음악 만들기 프롬프트 2.", "prompt": "이 사진과 어울리는 가사와 음악 장르를 매칭해서 생성해줘. 이 사진속 인물의 이름은 \"                       \"야 가사에  \"          \" 사랑해, \"                  \" 화이팅 이라는 내용등을 넣어줘.", "kind": "text"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-3.jpg", "title": "유럽 구시가지 카페 티라미수 제품 사진", "prompt": "- 스타일: 극도로 사실적이고 정교한 고해상도 8k 화질, 자연스러운 거리 사진 스타일, 따뜻한 오후 자연광.\n- 화면 비율: 9:16 세로형 구도.\n\n- 중심 피사체 (인물):\n  1. 업로드된 참고 이미지 속 인물의 성별과 외모를 정밀하게 분석하여 그대로 반영한 성인 1명을 생성한다.\n  2. 얼굴 특징 유지: 참고 이미지 속 인물의 얼굴형, 이목구비의 비례, 피부 질감, 착용한 악세사리(안경등이 있다면 안경 유지) 그리고 헤어스타일을 완벽하게 유지한다. \n  3. 의상 변경 (가장 중요): 기존의 의상을 아주 심플하고 깨끗한 핏의 검은색 긴팔 상의로 변경하여 착용시킨다.\n  4. 포즈/표정: 카메라를 정면으로 바라보며 행복하고 장난스러운 미소를 짓고, 오른손에 쥔 스푼을 입술에 대고 있는 포즈를 그대로 유지한다.\n\n- 테이블 세팅 및 제품:\n  1. 깨끗한 흰색 리넨 테이블보가 덮인 원형 야외 카페 테이블.\n  2. 테이블  소품 배치\n     - 좌측 전면: 참고 이미지 속 제품 상자(형태, 색상, 한글 영문 텍스트 및 폰트 스타일)와 제품의 구성품(바닥에 놓인 스틱)을 그대로 재현한다.\n     - 중앙 및 우측: 코코아 가루가 뿌려진 유리잔 티라미수, 카푸치노(라떼 아트 포함), 스푼, 접힌 냅킨, 설탕 용기, 스마트폰을 자연스럽게 배치한다.\n\n- 배경 및 환경:\n  1.  피렌체 스타일의 자갈길, 인물 뒤편의 역사적인 석조 건물, 정교한 조각의 아치형 나무 대문, 벽면의 작은 간판들과 등불등을 완벽하게 재현한다.\n\n  2. 원경: 자갈길을 걷는 행인들과 주변 건물들을 자연스러운 아웃포커싱(보케) 효과로 처리하여 인물과 테이블에 초점을 맞추되 원근감을 준다.\n\n  3. 조명: 따뜻한 오후 햇살이 카페 테라스에 내리쬐는 활기차고 편안한 분위기.", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-3-2.jpg", "title": "브라운 효소 이미지", "prompt": "브라운 효소 이미지 (다운로드용)", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-3-3.jpg", "title": "브라운 효소 이미지", "prompt": "브라운 효소 이미지 (다운로드용)", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-4.jpg", "title": "파리 에펠탑 카페 바게트 사진", "prompt": "- 스타일: 극도로 사실적이고 정교한 고해상도 8k 화질, 자연스러운 거리 사진 스타일, 따뜻한 오후 자연광.\n- 화면 비율: 9:16 세로형 구도.\n\n- 중심 피사체 (인물):\n  1. 업로드된 참고 이미지 속 인물의 성별과 외모를 정밀하게 분석하여 그대로 반영한 성인 1명을 생성한다.\n  2. 얼굴 특징 유지: 참고 이미지 속 인물의 얼굴형, 이목구비의 비례, 피부 질감, 착용한 악세사리(안경등이 있다면 안경 유지) 그리고 헤어스타일을 완벽하게 유지한다. \n  3. 의상 변경 (가장 중요): 기존의 의상을 아주 심플하고 깨끗한 핏의 검은색 긴팔 상의로 변경하여 착용시킨다.\n  4. 포즈/표정: 카메라를 정면으로 바라보며 행복하고 장난스러운 미소를 짓고, 갓 구운 바게트 빵 조각을 손에 들고 한 입 베어 물며 포즈를 그대로 유지한다.\n\n- 테이블 세팅 및 제품:\n  1. 깨끗한 흰색 리넨 테이블보가 덮인 원형 야외 카페 테이블.\n  2. 테이블  소품 배치\n     - 좌측 전면: 참고 이미지 속 제품 상자(형태, 색상, 한글, 영문 텍스트 및 폰트 스타일)와 제품의 구성품을 그대로 유지하면서 테이블의 소품들을 가리지않고 인물의 왼쪽앞에 자연스럽게 배치한다\n     - 중앙 및 우측:  바게트 빵이 담긴 바구니, 작은 접시에 놓인 버터, 카푸치노(라떼 아트 포함), 스푼, 접힌 냅킨, 평평하게 놓인 스마트폰이 배치\n\n- 배경 및 환경:\n  1. 대낮 프랑스 파리 에펠탑이 보이는 야외 테라스 카페 , 배경에는 거대한 에펠탑이 웅장하게 솟아 있으며 파리 특유의 하우스만 양식 석조건물들  \n2. 원경: 길을 걷는 행인들과 주변 건물들을 자연스러운 아웃포커싱(보케) 효과로 처리하여 인물과 테이블에 초점을 맞추고 원근감 있게 배치\n  3. 조명: 따뜻한 오후 햇살이 카페 테라스에 내리쬐는 활기차고 편안한 분위기.", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-4-2.jpg", "title": "프로바이오틱스 이미지", "prompt": "프로바이오틱스 이미지 (다운로드용)", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-5.jpg", "title": "LA 레이커스 홈 경기장 스포츠 광고", "prompt": "{\n  \"프롬프트\": \"NBA LA 레이커스 홈 경기장인 크립토닷컴 아레나(과거 스테이플스 센터)의 빛나는 **퍼플 앤 골드 코트**에서 촬영한, 역동적이고 격렬하며 극도로 사실적인 순간. 젊고 스포티한 **아시아인 (첨부된 첫 번째 이미지의 인물이 남자일 경우 남자, 여자일 경우 여자)**이 퍼플 앤 골드 색상의 공식 #23 LA 레이커스 홈 저지(LA LAKERS 로고 명확)와 일치하는 반바지, 운동화를 착용하고 있다. **(남성일 경우) 짧고 스포티한 머리카락이 흩날리며, (여성일 경우) 포니테일로 묶은 머리카락이 튀어 오르며** 코트에서 높이 점프하여 오른손으로 농구공을 골대로 슈팅하는 역동적인 동작 중이다. 농구공이 **이 인물의** 손을 떠나 림을 향해 날아가고 있으며, **이 인물은** 공에서 시선을 떼지 않고 집중하고 결연한 표정을 짓고 있다. **이 인물의** 얼굴 특징은 눈, 코, 입의 비율이 정확하고 완전히 자연스럽고 왜곡되지 않아야 한다. **이 인물** 주변의 **코트 바닥에는 선명한 LA 레이커스 로고가 있으며, 배경에는 수천 명의 환호하는 관중과 대형 Jumbotron 스코어보드에 레이커스 로고와 점수가 표시된다**. 코트 주변에는 상대 팀 선수들이 수비하려는 모습과 심판, 카메라맨들이 보인다. **실내 경기장의 밝은 스포트라이트 조명이 이 인물의 역동적인 근육 긴장과 농구공의 질감을 생생하게 비추며**, 활기차고 긴장감 넘치는 분위기를 연출한다. **이 인물의 전면 코트 바닥에, 두 번째 첨부된 제품 이미지 속 광고 제품** (예: 에너지 드링크 캔 또는 운동화 등) **이 놓여 있으며, 이 제품의 로고, 색상, 디자인, 패키징은 첨부된 두 번째 이미지와 완벽하게 일치해야 한다.** 제품은 밝게 조명을 받고 있으며, 제품 옆에 영문 광고 슬로건 \"UNLEASH YOUR GAME\" (게임의 힘을 해방하라)이 제품 로고와 함께 세련되게 배치되어 있다. 배경 Jumbotron에도 \"UNLEASH YOUR GAME\" 텍스트가 표시된다. 스타일: 초현실적인 역동적인 스포츠 사진, 조명: 밝고 선명한 실내 스포트라이트, 배경: LA 레이커스 퍼플 앤 골드 코트, 환호하는 관중, 대형 스코어보드, 상대 선수, 초점: 정확한 비율의 사실적인 얼굴과 집중된 표정, 역동적인 슈팅 동작과 농구공, 화면 비율: 3:4\"\n}", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-5-1.jpg", "title": "식물성 MSM 이미지", "prompt": "식물성 MSM 이미지(다운로드용)", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-6.jpg", "title": "LA 다저스 테라패치 스포츠 광고", "prompt": "{\n  \"프롬프트\": \"맑은 대낮, LA 다저스의 홈구장인 다저 스타디움 (Dodger Stadium). 블루와 화이트 컬러 스탠드, 대형 전광판 (Jumbotron), 야자수, 멀리 보이는 로스앤젤레스 스카이라인이 배경에 펼쳐진다. 수만 명의 환호하는 관중들이 파란색 옷을 입고 가득 차 있으며 야구장 바닥에는 선명한 Dodgers 로고가 보인다. 아시아인 (첨부된 첫 번째 이미지의 성별 조건부)이 LA 다저스 공식 홈 유니폼 (흰색, 파란색 'Dodgers' 로고, 번호)을 입고, 오타니 쇼헤이처럼 역동적이고 강력한 풀 스윙으로 홈런을 치는 순간이다. 배트가 공을 타격한 직후, 공은 이미 하늘로 솟아오르고 있으며, 인물은 팔을 쭉 뻗고 공을 응시하며 승리의 표정을 짓고 있다. (남성: 짧은 머리카락이 흩날림; 여성: 포니테일로 묶은 머리카락이 튀어 오름). 타석 (batter's box)에 위치. 역동적인 근육 긴장, 땀방울, 타격 순간의 먼지가 표현된다. 포수와 심판이 배경에 보인다. 타석 바로 옆 필드 바닥에, 두 번째 첨부된 제품 이미지 속 '테라패치' (TeraPatch) 상자가 놓여 있다. 제품의 로고, 색상, 디자인, 패키징은 첨부된 두 번째 이미지와 완벽하게 일치해야 한다. 제품 옆에 대형 광고 배너가 설치되어 있으며, 배너에는 한글로 **\\\"아픈 곳이 있다면 무조건 붙이세요! '테라패치'\\\"** 가 선명하고 세련된 글씨체로 표시된다. 배경 대형 전광판 (Jumbotron)에도 '테라패치' 로고와 슬로건이 표시된다. 스타일: 초현실적인 역동적인 스포츠 사진, 낮은 앵글, 클로즈업 및 미디엄 샷. 조명: 밝고 선명한 주간 자연광. 따뜻하고 활기차며 긴장감 넘치는 분위기. 인물의 얼굴, 타격 동작, 광고 제품 및 카피에 정확한 초점. 화면 비율: 3:4\"\n}", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-6-1.jpg", "title": "테라패치 이미지", "prompt": "테라패치 이미지(다운로드용)", "kind": "image"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-7.mp4", "title": "3-7 디엘릭서 브라운 효소 영상 프롬프트", "prompt": "첨부된 [첫 화면 이미지]의 주인공, 배경, 사람들, 소품, 구도와 야외 카페 배경 등  모든 것들을 이미지 속 그대로 시작점으로 삼아 자연스럽게 이어지는 영상을 생성해 줘.\n영상 속 주인공은 영상이 진행되는 동안 그 인물의 이목구비, 성별, 헤어스타일,의상 등 고유한 형태가 절대 뒤틀리거나 변형(Morphing)되지 않고 완벽하게 유지되어야 합니다.\n테이블 위 소품. 제품의 형태도 변형되지 않고 완벽하게 유지되어야 합니다.\n\n주인공은 스푼으로 티라미수 디저트를 먹으며 부드럽고 자연스럽게 행동하면서 대사를 이어 갑니다. 카메라를 향해 따뜻한 미소를 지으며, 다음의 한국어 대사를 발음에 맞춰 완벽하고 자연스러운 립싱크로 말합니다: \"여행에는 맛있는 음식이 빠질 수 없죠! 효소가 있어서 걱정이 없어요. 디엘릭서 브라운 효소로 속 편한 변화를 직접 경험해 보세요\"\n카메라는 안정적인 미디움 숏을 유지하고, 배경은 부드럽게 아웃포커싱(Bokeh) 처리해 줘. 전체적인 무드는 따뜻한 오후의 자연광이 내리쬐는 고급스럽고 아늑한 라이프스타일 브이로그 감성이어야 해..", "kind": "video"},
+  {"category": "지쿱AI대학교 3주차", "media": "images/3-8.mp4", "title": "프로바이오틱스 플러스 영상 프롬프트", "prompt": "첨부된 [첫 화면 이미지]의 주인공, 배경, 사람들, 소품, 구도와 야외 카페 배경 등  모든 것들을 이미지 속 그대로 시작점으로 삼아 자연스럽게 이어지는 영상을 생성해 줘.\n영상 속 주인공은 영상이 진행되는 동안 그 인물의 이목구비, 성별, 헤어스타일,의상 등 고유한 형태가 절대 뒤틀리거나 변형(Morphing)되지 않고 완벽하게 유지되어야 합니다.\n테이블 위 소품. 제품의 형태도 변형되지 않고 완벽하게 유지되어야 합니다.\n\n주인공은 바게트 빵을 손에 들고 먹지는 않고 입 가까이 댄 상태로 대사를 이어 갑니다. 카메라를 향해 따뜻한 미소를 지으며, 다음의 한국어 대사를 발음에 맞춰 완벽하고 자연스러운 립싱크로 말합니다: \"파리의 매일을 더 가볍게~~ 그리고 더 건강하게!!  제너럴 밸런스 프로바이오틱스 플러스가 함께 합니다.\"  대사가 끝난후 손에 들고 있던 바게뜨빵을 맛있게 먹는다. \n카메라는 안정적인 미디움 숏을 유지하고, 배경은 부드럽게 아웃포커싱(Bokeh) 처리해 줘. 전체적인 무드는 따뜻한 오후의 자연광이 내리쬐는 고급스럽고 아늑한 라이프스타일 브이로그 감성이어야 해", "kind": "video"},
+  {"category": "지쿱AI대학교 4주차", "media": "images/프로바이오틱스플러스.pdf", "title": "1. 노트북LM 실습", "prompt": "노트북LM 실습용 PDF 다운로드 파일", "kind": "file"},
+  {"category": "지쿱AI대학교 4주차", "media": "images/4-1.jpg", "title": "2. 지쿱 대박도사 GEMS", "prompt": "너는 긍정적인 해석을 해주는 사주 전문가야.  생년월일을 입력받으면 초년, 중년, 말년 운을 풀이해줘. 특히 올해의 재물운과 사람을 모으는 사업운을 강조해줘.  마지막엔 반드시 '귀인은 당신 곁에 있습니다'라는 멘트로 마무리해줘", "kind": "image"},
+  {"category": "지쿱AI대학교 4주차", "media": "images/4-2.jpg", "title": "3. 지쿱 관상도사 GEMS", "prompt": "https://gemini.google.com/gem/1Do7YMsBQETAlyO58qpCeeibnoTaZFF3y?usp=sharing", "kind": "image"},
+  {"category": "지쿱AI대학교 4주차", "media": "images/4-3.jpg", "title": "4. 인스타그램 문구 GEMS", "prompt": "지쿱 인스타그램 감성 마케터\n\n내가 입력한 텍스트를 인스타그램 피드용으로 바꿔줘.\n이모지(✨🔥👍)를 풍부하게 사용해서 시선을 끌어줘.\n가독성을 위해 줄 바꿈을 자주 해줘.\n글은 300자 내에서 만들어줘.\n마지막에 #지쿱AI대학교 #지쿱 #건강 #부업 #지쿱링크오더 등 관련 해시태그 5개를 달아줘.", "kind": "image"},
+  {"category": "지쿱AI대학교 4주차", "title": "5. 지쿱광고영상이미지챗봇 (셀카+제품 = 이미지생성)", "prompt": "지쿱 광고 포스터 프롬프트 GEMS\n\n사실적이고 AI 같지 않은 고해상도 제품 포스터 프롬프트 GEM\n지침\n입력 분석 (고해상도 텍스처 분석):\n사람 이미지: 성별(남자/여자)과 외모 특징을 분석합니다. 특히 피부 질감 (모공, 미세한 잔주름), 머리카락 한 가닥, 손가락과 발가락의 정확한 개수와 형태를 파악합니다.\n\n제품 이미지: 제품의 종류, 디자인, 색상, 브랜드 로고, 라벨의 텍스트, 재질(금속, 유리, 플라스틱 등)을 극도로 정밀하게 분석합니다.\n\n배경 및 장소 설정 (실제 세계의 불완전함 추가):\n\n분석된 제품의 특성에 맞춰 가장 매력적이면서도 사실적인 이미지 배경과 장소를 설정합니다. (예: 단순히 \"럭셔리 룸\" 대신 \"오래된 목재 테이블이 있는 고풍스러운 파리의 아파트 거실\"). **실제 세계의 흔적 (예: 약간 닳은 가구, 흩어진 소품, 자연스러운 먼지나 지문)**을 추가하여 AI의 완벽함을 피합니다.\n\n카피 생성 및 배치 (세련되고 자연스러운 통합):\n\n제품의 특징을 바탕으로 인스타그램 포스팅에 적합한 매력적인 한글 광고 카피를 만듭니다.\n\n카피는 이미지 내에 인위적인 텍스트 레이어가 아닌, 실제 인쇄물, 광고판, 또는 세련된 타이포그래피로 배경 요소와 자연스럽게 어우러지게 배치합니다.\n\n프롬프트 구성 (다큐멘터리 사진 스타일):\n\n모든 요소를 통합하여 초현실적 (hyperrealistic)이 아닌, 실제 필름 사진이나 다큐멘터리 사진 스타일의 3:4 비율 프롬프트를 작성합니다.\n\n**카메라 설정 (예: 50mm f/1.4), 조명 (예: 실제 주변광), 렌즈 특성 (예: 자연스러운 피사계 심도)**을 명시합니다.\n\n인물의 성별에 따라 세부 묘사(헤어스타일, 의상 등)를 조정하며, 불완전하지만 아름다운 순간을 포착합니다.\n\n출력 형식:\n\nJSON 형식의 \"프롬프트\" 키에 전체 내용을 담아 출력합니다.\n\n최종 프롬프트 생성 결과 (입력 대기 중)\n\n사용자가 이미지를 제공하면, 아래와 같은 형식의 결과물을 출력합니다.\n\nJSON\n{\"프롬프트\": \"[제품의 특성에 맞는 구체적인 실제 장소: 예 - 대낮 서울 성수동의 한 빈티지 카페 테라스, 실제 피트니스 센터의 근력 운동 구역]에서 촬영한, 사실적이고 자연스러운 사진. 업로드 된 첫 번째 이미지 속 [성별 분석 결과: 젊고 자연스러운 여성 또는 젊고 스포티한 남성]이 [제품의 특성에 맞는 자연스러운 의상: 예 - 세련된 코튼 셔츠, 트렌디한 스트릿웨어, 전문적인 운동복]을 입고 있다. [성별에 따른 헤어스타일 및 자연스러운 포즈 묘사]. 인물은 [제품의 효과를 보여주는 자연스럽고 솔직한 표정: 예 - 생각에 잠긴 미소, 집중된 표정]으로 [제품을 사용하는 동작 또는 제품을 바라보는 동작]을 취하고 있다. 인물의 얼굴 특징은 눈, 코, 입의 비율이 정확하고 완전히 자연스럽고 왜곡되지 않아야 하며, **피부 질감 (모공, 미세한 잔주름), 머리카락 한 가닥, 손가락 5개와 발가락 5개가 정확하게 묘사된** 사실적인 모습을 보여준다. 인물 옆에는 업로드 된 두 번째 이미지 속 제품이 [명확한 로고, 디자인, 텍스트 라벨을 유지한 채] 자연스럽게 배치되어 있다. 제품 주변으로 [제품의 성분이나 특성을 암시하는 소품들: 예 - 특정 꽃, 실제 물방울, 운동 기구]가 놓여 있다. [장소의 특징을 보여주는 배경 요소: 예 - 실제 거리 풍경, 자연광이 들어오는 창문, 활기찬 사람들]. **자연스러운 주변광(ambient light)과 따뜻한 실내 반사광이 공간을 가득 채우며**, AI 입자가 아닌 실제 필름 사진의 질감을 보여준다. [이미지 내에 자연스럽게 배치된 카피: 세련된 한글 타이포그래피로 '**\\\"[제품 특징 기반 카피: 예 - 당신의 순간을 완성하는, 자연스러운 아름다움.]\\\"**' 가 제품 로고와 함께 실제 광고판이나 인쇄물처럼 자연스럽게 배치되어 있다]. 스타일: 다큐멘터리 스타일의 사실적인 인물 및 제품 사진 (예: 50mm f/1.8 렌즈로 f/2.2에서 촬영한 피사계 심도), 조명: [부드럽고 따뜻한 주변 자연광 / 실제 경기장 스포트라이트], 배경: [장소의 세부 설명], 초점: 인물의 [눈/얼굴]에 정확한 초점, 제품의 질감과 세부 사항, 화면 비율: 3:4\"\n\n}", "kind": "text"},
+  {"category": "지쿱AI대학교 4주차", "title": "6. 지쿱광고동영상 생성챗봇", "prompt": "지쿱 광고영상생성 프롬프트 GEMS\n[GEM 시스템 지침: AI 기반 하이퍼 리얼 제품 홍보 영상 디렉터]\n역할:\n당신은 업로드된 이미지를 분석하여 제품의 특징(브랜드명, 텍스트, 재질, 색상)을 완벽하게 파악하고, 이를 바탕으로 세계 최고 수준의 하이퍼 리얼리스틱 비디오 생성 프롬프트를 작성하는 전문 디렉터입니다.\n작동 프로세스:\n이미지 정밀 분석: 사용자가 이미지를 업로드하면 제품의 형태, 정확한 브랜드 텍스트, 패키지의 재질(무광, 유광, 금속 등), 구성품(스틱, 병 등)을 분석합니다.\n프롬프트 생성: 분석된 데이터를 바탕으로 아래의 [표준 프롬프트 구조]에 맞춰 즉시 복사 가능한 형태의 영문 프롬프트를 출력합니다.\n[표준 프롬프트 구조 - 고정 제약 사항]\n1. Camera Control: ABSOLUTE STATIC LOCK\nTRIPOD SHOT. NO ZOOM. NO PANNING. NO MOVEMENT.\nThe camera angle and framing must remain 100% IDENTICAL to the reference image. Focus is fixed on the eyes.\n2. Audio Constraints: CRITICAL\nABSOLUTE SILENCE for background. NO MUSIC. NO AMBIENT NOISE.\nGenerate ISOLATED VOICE ONLY (Korean).\n3. Product Fidelity: EXTREME ACCURACY\n(여기에 분석된 제품의 세부 특징이 삽입됨)\nDo not generalize or hallucinate product details. Preserve all printed text and colors exactly.\n4. Acting Arc (Target Duration: 8 Seconds)\n0-2s: Warm smile, gentle head tilt.\n2-6s: Speaks clearly. Lips move with perfect synchronization to the Korean dialogue. Confident gaze.\n6-8s: Final authentic smile directly at the camera.\n5. Technical Details\nRealistic skin texture (pores, vellus hair), 4k resolution, Vertical framing (9:16), Catchlight in eyes, Detailed strands of hair.\nGEM에게 내리는 특별 명령:\n텍스트 보존: 제품 패키지에 적힌 모든 텍스트를 인식하여 [Product Fidelity] 섹션에 명시하세요.\n재질 묘사: 제품이 종이인지, 플라스틱인지, 유리인지 분석하여 텍스트 질감(Matte, Glossy 등)을 프롬프트에 포함하세요.\n대사 최적화: 사용자가 별도의 대사를 주지 않으면, 제품의 특성에 맞는 신뢰감 있는 한국어 대사 한 문장을 생성하여 [Dialogue Delivery] 섹션에 넣으세요.", "kind": "text"},
+  {"category": "지쿱AI대학교 일일과제 링크", "media": "images/6-1.jpg", "title": "6-1. 지쿱 AI 대학교 1학년 1차 숙제 링크", "prompt": "6-1. 지쿱 AI 대학교 1학년 1차 숙제 링크\n\nhttps://app.notion.com/p/AI-1-1-366b4989ca09802c9c41f7e1f6b602ea", "kind": "link", "linkUrl": "https://app.notion.com/p/AI-1-1-366b4989ca09802c9c41f7e1f6b602ea"},
+  {"category": "지쿱AI대학교 일일과제 링크", "media": "images/6-2.jpg", "title": "6-2. 지쿱 AI 대학교 1학년 2차 숙제 링크", "prompt": "6-2. 지쿱 AI 대학교 1학년 2차 숙제 링크\n\nhttps://app.notion.com/p/AI-1-2-372b4989ca098091b9d5ff9ab4df7910", "kind": "link", "linkUrl": "https://app.notion.com/p/AI-1-2-372b4989ca098091b9d5ff9ab4df7910"},
+  {"category": "지쿱AI대학교 일일과제 링크", "media": "images/6-3.jpg", "title": "6-3. 지쿱 AI 대학교 1학년 3차 숙제 링크", "prompt": "6-3. 지쿱 AI 대학교 1학년 3차 숙제 링크\n\nhttps://app.notion.com/p/AI-1-3-363b4989ca0981d7966bf0f4b9cf3fb0", "kind": "link", "linkUrl": "https://app.notion.com/p/AI-1-3-363b4989ca0981d7966bf0f4b9cf3fb0"},
+  {"category": "지쿱AI대학교 일일과제 링크", "media": "images/6-4.jpg", "title": "6-4. 지쿱 AI 대학교 1학년 4차 숙제 링크", "prompt": "6-4. 지쿱 AI 대학교 1학년 4차 숙제 링크\n\nhttps://app.notion.com/p/AI-1-4-372b4989ca09803a96b8f3ac127373de", "kind": "link", "linkUrl": "https://app.notion.com/p/AI-1-4-372b4989ca09803a96b8f3ac127373de"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-10.jpg", "title": "이미지 여유분 프롬프트 1", "prompt": "깨끗하고 순수한 화이트 배경 위에 놓인 세로형 포스터 스타일의 콜라주 디자인.\n\n배경 레이아웃은 3~4개의 가로형 라운드 직사각형이 층층이 쌓인 구조이며, 각 칸에는 동일한 인물의 서로 다른 포즈를 담은 시네마틱한 흑백 포트레이트 사진들이 배치되어 있습니다.\n\n전경(foreground)의 약간 왼쪽에는 동일한 인물이 자신감 넘치는 포즈를 취하고 있는 고화질 컬러 컷아웃(누끼) 이미지가 위치합니다. 전경의 인물은 테두리에 화이트 스티커 스타일의 외곽선이 처리되어 있어, 화이트 캔버스 위에서 명확하게 도드라지는 레이어드 콜라주 효과를 연출합니다.\n\n하이패션 에디토리얼 미학, 깔끔한 구성, 흑백 배경 패널과 컬러 전경 모델 사이의 강렬한 대비. 사실적인 질감, 스튜디오 조명, 초고해상도, 선명한 초점.", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-11.jpg", "title": "이미지 여유분 프롬프트 2", "prompt": "【업로드된 이미지속 인물】을 기반으로 합니다. 이 작품은 LOMO LC-A 스타일의 고화질 사진입니다. 하이 앵글(High angle shot) 시점을 채택하여, 시선은 첨부 사진 인물에게 집중됩니다.\n\n인물은 {argument name=\"服装\" default=\"검은색 긴 트렌치코트\"}**를 입고 있으며, 얼굴과 분위기는 【업로드 된 이미지 속 인물】과 완벽하게 일치합니다. 첨부 사진 인물은 바닥을 가득 메운 수많은 흑백 패션 광고판 위에 서 있습니다.\n\n하이 앵글 시점 덕분에 바닥에 깔린 모든 광고판 속 모델들 또한 시선은 첨부 이미지속  인물. 자신의 각기 다른 패션 화보임을 알 수 있으며, 마치 시선은 첨부 이미지 인물이 자신의 수많은 분신들 위에 서 있는 듯한 신비로운 느낌을 줍니다.", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-13.jpg", "title": "이미지 여유분 프롬프트 3", "prompt": "\"아늑한 예술가 스튜디오 안의 영화 같은 판타지 장면. 페인트 얼룩이 있는 앞치마를 입은 첨부한 이미지의 인물이 이젤에 앉아, 공중에 붓을 들고 캔버스를 차분하게 바라보고 있다. 캔버스에서 웅장한 동양 스타일의 드래곤이 3차원으로 나타나며, 그 비늘은 깊은 청록색과 파란색으로 칠해져 있고, 갈기와 머리 주위에는 흐르는 불타는 주황색 불꽃이 있으며, 연기가 위로 감돌고 있다. 드래곤은 살아 있는 듯하면서도 예술적으로 보이며, 붓 터치와 페인트로 형성된 것처럼 보인다. 부드러운 자연광이 얇은 커튼이 있는 창문을 통해 들어와 나무 작업 공간에 흩어져 있는 붓, 페인트, 예술 용품이 비춰진다. 따뜻하고 사실적인 조명, 얕은 심도, 초고해상도 질감, 마법적 사실주의, 판타지 사실주의 스타일, 8k 품질, 매우 세밀한 묘사, 영화 같은 구성, 부드러운 색 보정, 기발하면서도 평화로운 분위기.\"", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-15.jpg", "title": "이미지 여유분 프롬프트 4", "prompt": "\"전문 사진, 첨부한 이미지의 인물이 모델(참고 이미지), 카메라를 정면으로 바라보며, 아래에서 위로 촬영, 광각 렌즈 사용. 주인공이 몸을 기울이며 가까이에서 카메라에 음료수병을 보여주고, 한 손으로 병을 잡고 카메라 앞에 밀착. 병의 라벨과 방향이 곧게 유지되어 라벨이 선명하게 읽히도록. 주인공은 흰색 운동화를 신고 있으며, 한 발이 카메라 앞에 있음. 주인공이 거리에서 서 있고, 젖은 아스팔트와 튀는 물방울이 아래에서 촬영됨. 선명한 색상, 영화 같은 조명, 빛이 뒤에서 모델의 얼굴에 비침. --v7 --ar 3:4 --style raw\"", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-16.jpg", "title": "이미지 여유분 프롬프트 5", "prompt": "\"강력한 영화급 콜라주로, 한 프레임 안에서 첨부한 이미지 인물의 완전한 인생 여정을 이야기합니다. 이야기는 가장 왼쪽에서 시작되며, 부드럽게 빛나는 흑백 초음파 스캔 이미지가 미리 태어난 아기를 보여줍니다. 중앙으로 부드럽게 전환되며, 콜라주는 인생 단계들을 순차적으로 보여줍니다: 병원 천에 싸인 신생아, 비틀거리며 걷는 유아, 책가방을 멘 초등학생, 꿈으로 가득 찬 인물, 자신감 있게 일하는 젊은 인물, 힘과 지혜가 넘치는 성숙한 인물.가장 오른쪽에서 이야기는 인물의 노인 모습이 창가에 평화롭게 앉아 있는 모습으로 끝납니다. 은발이 따뜻한 석양 속에서 빛나며, 완성과 회상을 상징합니다.각 단계는 찢어진 종이 가장자리, 누출된 빛, 부드러운 운동 궤적, 떠오르는 기억, 시계 요소와 미세한 시간선으로 매끄럽게 연결됩니다.색상 그레이딩은 차가운 단색(출생)에서 생생한 따뜻한 톤(청춘)으로 전환되며, 결국 금빛 부드러운 색조(노년)로 귀결됩니다.극한의 감정, 시적, 영화적 서사, 얕은 심도, 실제 인물의 표정, 고세부 콜라주 구성, 상징적인 인생 여정, 영원하고 고무적인\"", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-17.jpg", "title": "이미지 여유분 프롬프트 5", "prompt": "\"prompt\": \"기반 <사용자 첨부 이미지>, 첨부한 사진의 인물, 약간 헝클어진 머리, 입에 담배를 물고 아래에서 불꽃을 통해 바라보는 모습. 헝클어진 머리는 자연스럽게 약간의 웨이브가 있으며, 약간 헝클어졌지만 거칠지 않음—힘들이지 않은 헝클임, 생활감 있는 질감. 불꽃을 통해 아래를 바라보며 카메라를 응시하는 반쯤 감긴 눈빛. 냉담하고, 초연하며, 무관심한 표정, 담배는 입술에서 늘어져 있다. 타오르는 신문을 손에 들고 있으며, 하반신 얼굴만 보임—턱, 입술, 담배와 턱이 불꽃을 통해 보인다. 검은색 정장 재킷, 어두운 정장. 《뉴욕 타임스》 신문이 앞에 있으며, 신문의 하단 가장자리와 불꽃이 극단적인 전경에 위치하고, 불꽃이 위로 타오르고 있다. 전경 요소—카메라가 불꽃을 통과하여 촬영하며, 불꽃 부분이 주체의 하반신 얼굴 시야를 가리고 프레임을 형성한다. 불꽃은 카메라와 주체의 얼굴 사이에 위치하며, 카메라 앞에서 불꽃이 솟아오른다. 따뜻한 주황색과 금색의 불꽃, 전경은 약간 초점이 흐릿하다. 불꽃은 자연스러운 흐림/프레임을 형성하며, 관람자는 불꽃을 통해 턱, 입술, 담배를 볼 수 있다. 담배는 입술에서 늘어져 있고, 점화되어 있으며, 불꽃을 통해 보이고, 연기와 불빛이 섞인다. 전경 불꽃을 통한 하반신 얼굴 클로즈업, 35mm f/1.8. 낮은 각도에서 신문 아래에서 수평으로 위로 불꽃을 통해 턱/입을 향해 촬영한다. 카메라가 불타는 신문 가장자리 뒤에 놓인 듯하며, 불꽃을 통해 촬영된다. 전경: 초점이 흐릿한 불꽃과 신문 가장자가 화면 하단/양쪽을 채운다; 중경: 턱, 입술, 담배가 선명하게 초점이 맞춰진다; 배경: 어두운 얼굴이 어둠 속으로 점점 사라진다. 얕은 심도—전경 불꽃이 약간 흐릿하고, 초점은 입술/턱 영역에 맞춰져 있다.\\n\\n단일 광원—오직 불꽃만 있다. 다른 광원은 없으며, 보조 조명도 없고, 환경광도 없다. 타오르는 신문의 불꽃만이 장면을 밝힌다. 불꽃은 얼굴 아래에서 위로 따뜻한 빛을 턱, 아래 입술, 코에 투사한다. 어둡고, 극적이며, 불빛의 명암 대비가 뚜렷하다. 순수한 검은색 환경, 얼굴은 완전히 어둠 속에서 떠오르며, 오직 아래의 불빛만이 비춘다.\\n\\n후지 ETERNA 스타일, 극도로 어둡고 언더 익스포즈, 불꽃은 화면에서 유일한 색상/빛이다. 순수한 검은 배경, 피부에 따뜻한 주황색 불빛, 다른 곳은 깊은 그림자. 전체 노출이 매우 어두워, 검은색이 압축된다. 친밀하지만 위협적인 느낌, 불꽃을 통한 엿보는 듯한 시선, 어두운 사람의 힘.\"\n}\n```", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-19.jpg", "title": "이미지 여유분 프롬프트 6", "prompt": "업로드해주신 인물들을 대상으로 한 전문적인 스튜디오 인물 사진입니다. 하이 앵글(위에서 아래로 내려다보는 구도)에서 촬영되었으며, 드라마틱한 스포트라이트 조명 아래 인물들의 얼굴이 밝게 빛납니다. 바닥에는 인물들을 중심으로 원형의 헤일로(광륜) 효과가 형성되어 있으며, 중심부가 가장 밝고 가장자리로 갈수록 서서히 어두워집니다. 깔끔하고 미니멀하며 인물에 집중된 구성입니다.", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-20.jpg", "title": "이미지 여유분 프롬프트 7", "prompt": "따뜻한 일몰이 내리는 사바나를 배경으로 한 초고화질(8K) 시네마틱 야생 동물 초상화. 첨부한 사진의 인물이 가벼운 마른 풀 질감이 느껴지는 무늬 없는 흰색 티셔츠를 입고, 어깨 위에 앉은 친근한 새끼 사자 옆에 안전하게 무릎을 굽히고 앉아 있는 모습. 옆에는 보호구역의 성체 사자가 그의 뺨을 부드럽게 맞대고 있음. 긴 렌즈가 장착된 소니(Sony) a9iii DSLR 카메라를 들고 있으며, 차분하고 집중된 분위기. 황금빛 아크바르 풀, 부드러운 먼지, 흐릿하게 처리된 아카시아 나무, 깊이 있는 시네마틱 조명.", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-20-1.jpg", "title": "2-20 동영상이미지만들기", "prompt": "업로드한 사진속 주인공이 소파에 편하게 앉아 케어세르브 웨이브플러스 기기(업로드한 사진속 제품의 형태를 그대로 유지)에 맨발을 올리고, 마치 땅을 밟듯 편안하게 충전되는 밝은 표정으로 카메라를 향해 말하는 모습을 이미지로 만들어줘.  자막이나 텍스트 전혀 없음. 9:16", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/웨이브플러스.jpg", "title": "동영상만들기 제품 이미지", "prompt": "다운로드 파일", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-20-2.mp4", "title": "2-21 동영상 만들기", "prompt": "이미지 TO 비디오\n카메라를 보며 정확한 한국어 입모양(립싱크)으로 마치 땅을 밟듯 자연스럽게 몸이 충전되는 시원함을 대화하듯 설명함.\n[TTS 대본(Script) 한국어 100% 대화체)]:\n\"이렇게 하루에 딱 30분만 앉아있으면, 발끝부터 따스하고 편안한 기운이 온몸으로 스르륵 올라와요.\"\n[Voice Setting Guide]: 한국 여성 성우/ 중저음, 또렷한 한국어 발음, 감정: [편안한/밝은] / 속도 1.0x /\n[효과음 (SFX)]: 맑은 전자 기기 작동음 (High-tech Start Hum)", "kind": "video"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-21.jpg", "title": "2-22. 일정표만들기", "prompt": "지쿱AI대학교 1학년 무료강의 교육일정표를 만들고 싶어.\n1회차는 '제미나이 기초, 이미지 만들기', 2회차는 '제미나이로 이미지 및 카드뉴스 만들기', 3회차는 인스타그램 개설,  동영상 만들기, AI수익화, 4회차는 'GEMS 설정 방법. EDIT 활용' 이야,\n배경은 인공지능 느낌의 강의장 배경과 강사의 프로필 사진(업로드한 이미지와 정확히 일치)이 포함된 포스터 이미지를 만들어줘. . 위의 텍스트 내용이외에 다른 내용은 금지,  9:16 size", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-5.jpg", "title": "이미지 여유분 프롬프트 8", "prompt": "\"50mm 렌즈로 촬영한 시네마틱한 로우 앵글 인물 사진입니다. 업로드된 얼굴을 참조한 인물 피사체를 아래에서 위로 올려다보는 구도이며, 인물은 양팔을 올린 채 낡은 콘크리트와 금속 난간에 자연스럽게 기대어 있습니다. 피사체는 햇살을 받은 듯한 하이라이트가 있는 짧은 흑발을 가졌으며, 헐렁하게 떨어지는 오버사이즈의 질감 있는 베이지색 긴소매 크루넥 맨투맨을 입고 있습니다. 맨투맨에는 검정색 글씨로 \"지쿱 AI 대학교 입학하세요'라고 크게 씌어 있습니다. 인물은 사색적인 표정으로 오른쪽 상단을 응시하고 있으며, 턱선 아래에 부드러운 그림자를 만들고 피부의 질감을 강조하는 부드럽고 따뜻한 자연광을 받고 있습니다. 구도상 오른쪽에는 구조물의 강한 전경 흐림(보케) 처리가 되어 있어 깊이감을 더하고 피사체를 돋보이게 합니다. 배경은 광활하고 짙은 청록색(Teal-Cyan) 하늘로 채워져 있어, 아날로그 필름 사진의 전형적인 특징인 인상적인 '틸 앤 오렌지(Teal and Orange)' 색감을 연출합니다.\"", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-6.jpg", "title": "이미지 여유분 프롬프트 9", "prompt": "컴팩트한 캐논 디지털 카메라 화면에 표시된 첨부한 이미지의 인물 클로즈업 샷입니다. 카메라 바디의 버튼, 다이얼, 질감이 화면 속 이미지와 함께 보입니다. 화면 속 사진은 밤에 실내에서 촬영된 것으로, 밝은 내장 플래시가 얼굴과 머리카락에 강한 하이라이트를 만들어냅니다.", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-8-1.jpg", "title": "이미지 여유분 프롬프트 10", "prompt": "남자\n\n어둡고 몽환적이며 빈티지한 느낌의 바람 부는 밤, 차 창밖에서 차창에 등을 기대고 있는 저의 사진을 만들어 주세요. 흰색 와이셔츠 상의를 입고 머리 스타일은 유지해주세요! 얼굴의 세부 사항을 정확하게 유지해 주세요. 얼굴 특징을 변형하지 말고 머리 위치도 그대로 유지해 주세요.", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-8-2.jpg", "title": "이미지 여유분 프롬프트 11", "prompt": "여자\n\n어둡고 몽환적이며 빈티지한 느낌의 바람 부는 밤, 차 창밖에서 차창에 등을 기대고 있는 저의 사진을 만들어 주세요. 오프숄더 스타일의 흰색 니트 상의를 입고 갈색의 긴 웨이브 머리를 하고 있습니다. 얼굴의 세부 사항을 정확하게 유지해 주세요. 얼굴 특징을 변형하지 말고 머리 위치도 그대로 유지해 주세요.", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-12.jpg", "title": "이미지 여유분 프롬프트 12", "prompt": "\"prompt\": \"어깨 위에서 [Character Name]의 초상을 묘사한 영화 스타일의 미니멀리스트 색상 포스터. 얼굴은 간단한 그리드에 배열된 적은 수의 큰 정사각형 종이 조각으로 재현됩니다 [약 4x5 또는 5x6 조각]. 각 종이 조각은 얼굴의 별개의 부분을 포함하고 있으며, 함께 완전한 초상을 형성합니다. 얼굴을 구성하는 내부 종이 조각들은 완벽하게 평평하지 않으며, 많은 조각들이 약간 말린 가장자리와 들린 모서리를 가지고 있어, 작은 사실적인 그림자를 드리워 3차원적이고 붙여진 듯한 외관을 제공합니다. 이 네 개의 정사각형 중에는 피부/이미지 위에 직접 나타나는 미세한 검은색 손글씨 노트 [text1, text2, text3, text4]가 있습니다. 이 중앙 그리드의 외곽에는 여러 스티커 [Sticker Color]가 다양한 임의의 위치(모서리에 한정되지 않음)에 부착되어 있으며, 손글씨로 된 [Outer Text, e.g., iconic quotes]를 포함하고 있습니다. 전체 구성은 약간 불규칙하며, 조각들 사이에 보이는 간격이 있어 배경에 콘크리트 벽 [Color]가 드러납니다. 작품 전반에 걸쳐 사실적인 종이 질감이 있으며, 들린 가장자리를 강조하는 고품질 스튜디오 조명과 잉크 및 종이 결에 대한 선명한 초점이 특징입니다.\"\n}", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-18.jpg", "title": "이미지 여유분 프롬프트 13", "prompt": "\"prompt\": \"특写 스타일화 편집 사진, 거대한 열린 입/치아 구조 내부에 앉아 있는 첨부한 이미지의 인물을 보여줍니다; 입은 극적인 배경으로, 입술은 빛나고, 치아는 다이아몬드 장식의 치아 교정기를 착용하고 있으며, 양쪽은 엮인 머리띠로 감싸져 있습니다. 주체는 캐주얼 스트리트 의상을 입고 편안하게 앉아 있으며, 다리를 벌리고 있습니다. 낮은 각도에서 촬영되었고, 높은 대비, 하드 라이트 스튜디오 조명과 거울 같은 하이라이트가 있으며, 차가운 색조에 파란색이 섞이고 따뜻한 색상이 포인트로 사용되었습니다. 하단 중앙에 GCOOP 로고가 있습니다. 8K, 사진 수준의 편집 스타일.\"", "kind": "image"},
+  {"category": "실습용 프롬프트(이미지,동영상)", "media": "images/2-14.jpg", "title": "이미지 여유분 프롬프트 14", "prompt": "\"고급 패션 잡지 화보, 첨부한 이미지의 인물이 서서 카메라를 똑바로 바라보며, 화면 중앙에서 약간 고개를 돌리고, 주변에는 뉴욕 타임스 스퀘어를 빠르게 지나가는 흐릿한 인물 실루엣이 있습니다. 인물의 표정은 차분하고 냉철하며, 검은색 미니멀리즘 의상을 입고 있습니다. 배경은 타임스 스퀘어의 활기찬 조명과 광고판을 보여주며, 약간 추상적이고 밝아 그녀의 정지된 존재와 동적 흐림 사이의 대비를 강조합니다. 편집 스타일, 영화적 구도, 순수 예술 사진, 부드러운 잡지 질감, 고해상도", "kind": "image"}
+];
+items.forEach((it, i)=>{ it.id = i; it.no = it.media ? ((it.media.match(/images\/([^/.]+)/)||['',''])[1]) : ''; });
+let current = '전체보기';
+let query = '';
+const grid = document.getElementById('grid');
+const tabs = document.getElementById('tabs');
+const count = document.getElementById('count');
+const search = document.getElementById('search');
+
+const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', webp:'image/webp', pdf:'application/pdf', mp4:'video/mp4', mov:'video/quicktime' };
+function extOf(p){ return (String(p||'').split('?')[0].split('.').pop()||'').toLowerCase(); }
+function fileName(p){ const n = String(p||'').split('/').pop(); try{ return decodeURIComponent(n); }catch(e){ return n; } }
+function isPdf(it){ return extOf(it.media) === 'pdf'; }
+function isTextOnly(it){ return it.kind === 'text' || !it.media; }
+function mediaLabel(it){ if(it.kind==='video') return '영상'; if(isPdf(it)) return 'PDF'; return '이미지'; }
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
+function isLinkItem(it){
+  return it.kind === 'link' || !!it.linkUrl || (it.category && it.category.includes('일일과제'));
+}
+function getLinkUrl(it){
+  if(it.linkUrl) return it.linkUrl;
+  const urls = String(it.prompt || '').match(/https?:\/\/[^\s]+/g);
+  return urls ? urls[0] : '#';
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escapeJs(s){ return String(s).replace(/'/g, "\\'"); }
+
+function mediaHTML(it, detail=false){
+  const cls = detail ? 'detailMedia' : 'thumb';
+  if(isTextOnly(it)) return `<div class="${cls}"><div class="textTile"><div class="tileIcon">📝</div><div class="tileLabel">프롬프트</div></div></div>`;
+  if(isPdf(it)) return `<div class="${cls}"><div class="fileTile"><div class="tileIcon">📄</div><div class="tileLabel">PDF 파일</div><div class="tileName">${escapeHtml(fileName(it.media))}</div></div></div>`;
+  if(it.kind==='video') return `<div class="${cls}"><video src="${it.media}" controls playsinline muted preload="metadata" onerror="this.outerHTML='<div class=&quot;placeholder&quot;>${it.media}</div>'"></video></div>`;
+  return `<div class="${cls}"><img src="${it.media}" alt="${it.no} ${escapeHtml(it.title)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;placeholder&quot;>${it.media}</div>'"></div>`;
+}
+function titleHTML(it){ return it.no ? `${it.no}. ${escapeHtml(it.title)}` : escapeHtml(it.title); }
+function badgeHTML(it){ return `<span class="badge">${it.no ? it.no : '프롬프트'}</span>`; }
+
+function actionsHTML(it, detail=false){
+  const id = it.id;
+  if(isTextOnly(it)){
+    return `<button class="primary" onclick="copyPrompt(${id})">${detail?'프롬프트 복사하기':'프롬프트 복사'}</button><button class="blue" onclick="sharePrompt(${id})">${detail?'프롬프트 공유하기':'프롬프트 공유'}</button>`;
+  }
+  const label = mediaLabel(it);
+  if(isPdf(it)){
+    return `<button class="primary" onclick="downloadMedia(${id})">PDF 다운로드</button><button class="blue" onclick="shareMedia(${id})">PDF 파일 공유</button>`;
+  }
+  return `<button onclick="downloadMedia(${id})">${label} 저장</button><button onclick="shareMedia(${id})">${label} 파일 공유</button><button class="primary" onclick="copyPrompt(${id})">${detail?'프롬프트 복사하기':'프롬프트 복사'}</button><button class="blue" onclick="sharePrompt(${id})">${detail?'프롬프트 공유하기':'프롬프트 공유'}</button>`;
+}
+
+function renderTabs(){ tabs.innerHTML = categories.map(c=>`<button class="tab ${c===current?'active':''}" onclick="setCat('${escapeJs(c)}')">${c}</button>`).join(''); }
+function filtered(){ const q=query.trim().toLowerCase(); return items.filter(it => (current==='전체보기'||it.category===current) && (!q || (it.title+' '+it.prompt+' '+(it.media||'')+' '+it.no).toLowerCase().includes(q))); }
+function render(){
+  renderTabs();
+  const list=filtered();
+  count.textContent = `${list.length}개 프롬프트 표시 중`;
+  grid.innerHTML = list.map(it=>{
+    if(isLinkItem(it)){
+      const url = getLinkUrl(it);
+      return `<article class="card linkCard">
+        <a class="cardLinkWrap" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(it.title)} 링크 열기">
+          ${mediaHTML(it)}
+          <div class="body">
+            <span class="badge">${it.no}</span>
+            <div class="title">${it.no}. ${escapeHtml(it.title)}</div>
+            <div class="promptPreview">${escapeHtml(it.prompt)}</div>
+            <div class="linkHint">이미지 클릭 시 링크로 이동</div>
+          </div>
+        </a>
+        <div class="linkOnlyActions">
+          <a class="linkGo" href="${url}" target="_blank" rel="noopener noreferrer">링크로 바로가기</a>
+        </div>
+      </article>`;
+    }
+    return `<article class="card">
+      <div onclick="openModal(${it.id})">${mediaHTML(it)}<div class="body">${badgeHTML(it)}<div class="title">${titleHTML(it)}</div><div class="promptPreview">${escapeHtml(it.prompt)}</div></div></div>
+      <div class="actions">${actionsHTML(it)}</div>
+    </article>`;
+  }).join('');
+}
+function setCat(c){ current=c; render(); window.scrollTo({top:0}); }
+search.addEventListener('input', e=>{ query=e.target.value; render(); });
+
+/* ===== 복사 ===== */
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); toast('복사 완료'); return; }catch(e){}
+  const ta=document.createElement('textarea'); ta.value=text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); toast('복사 완료'); }catch(e){ toast('복사에 실패했어요'); } ta.remove();
+}
+function copyPrompt(id){ copyText(items[id].prompt); }
+function purePromptShareText(it){
+  const urls = it.prompt.match(/https?:\/\/[^\s]+/g);
+  if (urls && (it.category.includes('링크') || /링크/.test(it.title))) return urls[0];
+  return it.prompt;
+}
+/* 프롬프트 공유: 텍스트만 공유 (사이트 주소는 공유하지 않음) */
+async function sharePrompt(id){ const it=items[id]; const text=purePromptShareText(it); if(navigator.share){ try{ await navigator.share({text}); return; }catch(e){ if(e && e.name==='AbortError') return; } } await copyText(text); }
+
+/* ===== 파일 다운로드 (이미지 / PDF / MP4) ===== */
+async function downloadMedia(id){
+  const it=items[id];
+  const name=fileName(it.media);
+  try{
+    const res=await fetch(it.media); if(!res.ok) throw new Error('fetch');
+    const blob=await res.blob();
+    const typed=new Blob([blob],{type: MIME[extOf(it.media)] || blob.type || 'application/octet-stream'});
+    const url=URL.createObjectURL(typed);
+    const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+    toast('다운로드를 시작해요');
+  }catch(e){
+    const a=document.createElement('a'); a.href=it.media; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  }
+}
+
+/* ===== 파일 공유 (사이트 전체가 아닌 파일 자체만 공유) ===== */
+async function shareMedia(id){
+  const it=items[id];
+  try{
+    const res=await fetch(it.media); if(!res.ok) throw new Error('fetch');
+    const blob=await res.blob();
+    const type=MIME[extOf(it.media)] || blob.type || 'application/octet-stream';
+    const file=new File([blob], fileName(it.media), {type});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+      return;
+    }
+    toast('이 기기는 파일 공유를 지원하지 않아 다운로드해요');
+    downloadMedia(id);
+  }catch(e){
+    if(e && e.name==='AbortError') return;
+    toast('파일을 불러오지 못했어요');
+  }
+}
+
+/* ===== 상세 보기 ===== */
+function openModal(id){
+  const it=items[id];
+  if(isLinkItem(it)){
+    window.open(getLinkUrl(it), '_blank', 'noopener,noreferrer');
+    return;
+  }
+  document.getElementById('detail').innerHTML = `${mediaHTML(it,true)}<h2 class="detailTitle">${titleHTML(it)}</h2><div class="detailPrompt">${escapeHtml(it.prompt)}</div><div class="detailActions">${actionsHTML(it,true)}</div>`;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal').setAttribute('aria-hidden','false');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); document.getElementById('modal').setAttribute('aria-hidden','true'); }
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+render();
+</script>
+</body>
+</html>
