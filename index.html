@@ -82,6 +82,7 @@ button.blue { background:var(--accent); color:#fff; }
 .hwSection { border:1px solid var(--line); border-radius:20px; padding:14px; margin:14px 0; background:#fff; }
 .hwSection > h3 { margin:0 0 10px; font-size:17px; font-weight:900; letter-spacing:-.03em; }
 .hwGuide { white-space:pre-wrap; font-size:13px; line-height:1.6; background:var(--soft); color:#2b3a8f; border-radius:14px; padding:10px 12px; margin-bottom:10px; }
+.hwGuideBtns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:-2px 0 10px; }
 .hwSub { font-size:13px; font-weight:900; color:var(--accent); margin:12px 2px 6px; }
 .hwMediaRow { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 .hwMediaRow.one { grid-template-columns:1fr; }
@@ -221,6 +222,8 @@ function isHw(it){ return it.kind === 'homework'; }
 function hwFirstPrompt(h){ for(const p of h.parts){ if(p.prompts.length) return p.prompts[0].text; } return ''; }
 function hwPrompt(id,pi,qi){ return items[id].hw.parts[pi].prompts[qi].text; }
 function hwCopy(id,pi,qi){ copyText(hwPrompt(id,pi,qi)); }
+function hwGuideCopy(id,pi){ copyText(items[id].hw.parts[pi].guide); }
+async function hwGuideShare(id,pi){ const text=items[id].hw.parts[pi].guide; if(navigator.share){ try{ await navigator.share({text}); return; }catch(e){ if(e && e.name==='AbortError') return; } } await copyText(text); }
 async function hwShareText(id,pi,qi){ const text=hwPrompt(id,pi,qi); if(navigator.share){ try{ await navigator.share({text}); return; }catch(e){ if(e && e.name==='AbortError') return; } } await copyText(text); }
 function hwCardHTML(it){
   const h = it.hw;
@@ -241,7 +244,7 @@ function hwDetailHTML(it){
     const inputs = p.media.filter(m=>m.role==='input');
     const examples = p.media.filter(m=>m.role!=='input');
     let s = `<section class="hwSection"><h3>${escapeHtml(p.title)}</h3>`;
-    if(p.guide) s += `<div class="hwGuide">${escapeHtml(p.guide)}</div>`;
+    if(p.guide) s += `<div class="hwGuide">${escapeHtml(p.guide)}</div><div class="fieldBtns hwGuideBtns"><button class="primary" onclick="hwGuideCopy(${it.id},${pi})">숙제 순서 복사</button><button class="blue" onclick="hwGuideShare(${it.id},${pi})">숙제 순서 공유</button></div>`;
     if(p.notes && p.notes.length) s += `<div class="hwTip">${escapeHtml(p.notes.join(' '))}</div>`;
     if(inputs.length) s += `<div class="hwSub">📎 첨부용 이미지 (사진과 함께 올려주세요)</div><div class="hwMediaRow ${inputs.length===1?'one':''}">${inputs.map(hwMediaHTML).join('')}</div>`;
     s += p.prompts.map((q,qi)=>`<div class="hwPrompt"><div class="hwSub">${hwPromptTitle(p,q)}</div><div class="detailPrompt">${escapeHtml(q.text)}</div><div class="fieldBtns"><button class="primary" onclick="hwCopy(${it.id},${pi},${qi})">프롬프트 복사</button><button class="blue" onclick="hwShareText(${it.id},${pi},${qi})">프롬프트 공유</button></div></div>`).join('');
